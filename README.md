@@ -19,19 +19,19 @@ The application features a warm, welcoming fintech UI/UX with interactive sideba
 
 
 ### 1. Portfolio Overview Dashboard
-![Portfolio Overview Dashboard](./docs/screenshots/01-portfolio-overview.png)
+![Portfolio Overview Dashboard](./docs/screenshots/01-portfolio-overview.PNG)
 *View total portfolio balance, 90% withdrawal cap limit, registered portfolios, retirement eligibility status, and product holdings.*
 
 ### 2. Create Withdrawal Notice & Live Impact Simulation
-![Create Withdrawal Notice Form](./docs/screenshots/02-withdrawal-form.png)
+![Create Withdrawal Notice Form](./docs/screenshots/02-withdrawal-form.PNG)
 *Submit withdrawal requests with real-time balance simulation, quick percentage cap shortcuts (25%, 50%, 75%, 90% Max), and business rule validation alerts.*
 
 ### 3. Withdrawal Audit History & Filtered CSV Export
-![Withdrawal History Table](./docs/screenshots/03-withdrawal-history.png)
+![Withdrawal History Table](./docs/screenshots/03-withdrawal-history.PNG)
 *Audit log of submitted notices with date range filtering, status badges, and one-click CSV statement export.*
 
 ### 4. Responsive Mobile & Tablet Drawer Menu
-![Mobile Drawer Interface](./docs/screenshots/04-mobile-drawer.png)
+![Mobile Drawer Interface](./docs/screenshots/04-mobile-drawer.PNG)
 *Mobile-optimized navigation drawer with hamburger toggle menu and warm gradient theme.*
 
 > 💡 **Screenshot Storage Location**: Saved screenshot image files are  in `docs/screenshots/` inside the project root:
