@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Badge } from './ui/Badge';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Enviro365 Warm Green Top Navigation Bar
- * Features: Mobile drawer toggle hamburger, live functional global search input, interactive notification popover.
+ * Features: Mobile drawer toggle hamburger, live functional global search input, interactive notification popover, Auth modal trigger.
  */
 export const Navbar = ({
   currentInvestor,
@@ -19,6 +20,7 @@ export const Navbar = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(recentNotices.length);
   const popoverRef = useRef(null);
+  const { user, isAdmin, setAuthModalOpen } = useAuth();
 
   useEffect(() => {
     setUnreadCount(recentNotices.length);
@@ -47,7 +49,7 @@ export const Navbar = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E5E0D8] px-4 sm:px-6 h-14 flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(27,38,35,0.02)]">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E5E0D8] px-4 sm:px-6 h-14 flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(27,38,35,0.02)] font-sans">
       {/* Left: Mobile Hamburger Toggle + Search input */}
       <div className="flex items-center gap-3 flex-1 max-w-md">
         {/* Mobile Hamburger Toggle Button */}
@@ -92,18 +94,20 @@ export const Navbar = ({
 
       {/* Right: Profile Summary & Notification Bell */}
       <div className="flex items-center gap-2.5">
-        {/* Mobile Investor Switcher */}
-        <div className="md:hidden">
-          <select
-            value={currentInvestorId}
-            onChange={(e) => onSelectInvestor(Number(e.target.value))}
-            className="h-8 bg-[#F5F1EC] text-[#1C1917] text-[11px] font-medium px-1.5 rounded-[6px] border border-[#E5E0D8]"
-          >
-            {investorsList.map((inv) => (
-              <option key={inv.id} value={inv.id}>{inv.name.split(' ')[0]}</option>
-            ))}
-          </select>
-        </div>
+        {/* Mobile Investor Switcher (Admin only) */}
+        {isAdmin && (
+          <div className="md:hidden">
+            <select
+              value={currentInvestorId}
+              onChange={(e) => onSelectInvestor(Number(e.target.value))}
+              className="h-8 bg-[#F5F1EC] text-[#1C1917] text-[11px] font-medium px-1.5 rounded-[6px] border border-[#E5E0D8]"
+            >
+              {investorsList.map((inv) => (
+                <option key={inv.id} value={inv.id}>{inv.name.split(' ')[0]}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Desktop Eligibility Badge */}
         {currentInvestor && (
@@ -190,14 +194,25 @@ export const Navbar = ({
           )}
         </div>
 
-        {/* User Avatar */}
+        {/* User Account Login Button / Avatar */}
         <div className="flex items-center gap-2 pl-2 border-l border-[#E5E0D8]">
-          <div className="w-7 h-7 rounded-full bg-[#1A7A6D] text-white flex items-center justify-center font-semibold text-[11px] shadow-sm">
-            {currentInvestor?.name ? currentInvestor.name.charAt(0) : 'U'}
-          </div>
-          <span className="text-[13px] font-medium text-[#1C1917] hidden lg:block">
-            {currentInvestor?.name || 'Investor'}
-          </span>
+          {user ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 rounded-full bg-[#1A7A6D] text-white flex items-center justify-center font-semibold text-[11px] shadow-sm">
+                {user.name ? user.name.charAt(0) : 'U'}
+              </div>
+              <span className="text-[13px] font-medium text-[#1C1917] hidden lg:block">
+                {user.name} ({user.role})
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="px-3 py-1 bg-[#1A7A6D] hover:bg-[#13655A] text-white font-medium text-[12px] rounded-[6px] transition-colors cursor-pointer shadow-xs"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
     </header>

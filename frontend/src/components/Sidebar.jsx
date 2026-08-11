@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Enviro365 Warm Fintech Sidebar Component
  * Specs: 240px width, subtle warm gradient background (from-[#FFFDF9] via-[#FAF8F4] to-[#F5F1EC]),
- * hover tooltips, mobile slide-over drawer support with close button.
+ * hover tooltips, mobile slide-over drawer support with close button, Admin role navigation support.
  */
 export const Sidebar = ({
   activeTab,
@@ -16,6 +17,7 @@ export const Sidebar = ({
   onCloseMobile,
 }) => {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const { user, isAdmin, setAuthModalOpen, logout } = useAuth();
 
   const navItems = [
     {
@@ -53,6 +55,21 @@ export const Sidebar = ({
     },
   ];
 
+  if (isAdmin) {
+    navItems.push({
+      id: 'admin',
+      label: 'Admin Operations',
+      tooltip: 'System administrator dashboard for notice approvals, investor directory, and AUM analytics.',
+      badge: 'Admin',
+      icon: (
+        <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+        </svg>
+      ),
+    });
+  }
+
   const handleItemClick = (id) => {
     setActiveTab(id);
     if (isMobile && onCloseMobile) {
@@ -62,7 +79,7 @@ export const Sidebar = ({
 
   return (
     <aside
-      className={`bg-gradient-to-b from-[#FFFDF9] via-[#FAF8F4] to-[#F5F1EC] border-r border-[#E5E0D8] flex flex-col justify-between p-4 shrink-0 shadow-[1px_0_10px_rgba(27,38,35,0.02)] ${
+      className={`bg-gradient-to-b from-[#FFFDF9] via-[#FAF8F4] to-[#F5F1EC] border-r border-[#E5E0D8] flex flex-col justify-between p-4 shrink-0 shadow-[1px_0_10px_rgba(27,38,35,0.02)] font-sans ${
         isMobile ? 'w-full h-full min-h-full' : 'w-[240px] min-h-screen hidden md:flex'
       }`}
     >
@@ -98,26 +115,72 @@ export const Sidebar = ({
           )}
         </div>
 
-        {/* Investor Context Selector */}
-        <div className="bg-white/80 backdrop-blur-sm p-2.5 rounded-[8px] border border-[#E5E0D8] space-y-1.5 shadow-sm">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] font-semibold text-[#78716C] uppercase tracking-wider">Active Investor</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1A7A6D]" />
+        {/* User Account / Role Status */}
+        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-[10px] border border-[#E5E0D8] space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-[#78716C] uppercase tracking-wider">Account Role</span>
+            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+              isAdmin ? 'bg-[#1C1917] text-white' : 'bg-[#E8F5F2] text-[#13655A]'
+            }`}>
+              {user ? user.role : 'GUEST'}
+            </span>
           </div>
-          <select
-            value={currentInvestor?.id || 1}
-            onChange={(e) => onSelectInvestor(Number(e.target.value))}
-            className="w-full bg-[#FAF8F4] text-[#1C1917] text-[12px] font-semibold px-2.5 py-1.5 rounded-[6px] border border-[#E5E0D8] focus:outline-none focus:border-[#1A7A6D] cursor-pointer hover:bg-white transition-colors"
-          >
-            {investorsList.map((inv) => (
-              <option key={inv.id} value={inv.id}>
-                {inv.name} (Age {inv.age})
-              </option>
-            ))}
-          </select>
+
+          {user ? (
+            <div className="flex items-center justify-between pt-1 border-t border-[#E8E3DB]">
+              <div className="truncate pr-1">
+                <p className="text-[12px] font-bold text-[#1C1917] truncate">{user.name}</p>
+                <p className="text-[10px] text-[#78716C] truncate">{user.email}</p>
+              </div>
+              <button
+                onClick={logout}
+                className="text-[11px] font-medium text-[#991B1B] hover:underline shrink-0"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="w-full py-1.5 bg-[#1A7A6D] hover:bg-[#13655A] text-white font-semibold text-[12px] rounded-[6px] transition-colors cursor-pointer"
+            >
+              Log In / Register
+            </button>
+          )}
         </div>
 
-        {/* Main Navigation with Hover Tooltips */}
+        {/* Investor Context Selector — Admins get a dropdown; Investors see only their own profile */}
+        {isAdmin ? (
+          <div className="bg-white/80 backdrop-blur-sm p-2.5 rounded-[8px] border border-[#E5E0D8] space-y-1.5 shadow-sm">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-semibold text-[#78716C] uppercase tracking-wider">Active Profile</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1A7A6D]" />
+            </div>
+            <select
+              value={currentInvestor?.id || 1}
+              onChange={(e) => onSelectInvestor(Number(e.target.value))}
+              className="w-full bg-[#FAF8F4] text-[#1C1917] text-[12px] font-semibold px-2.5 py-1.5 rounded-[6px] border border-[#E5E0D8] focus:outline-none focus:border-[#1A7A6D] cursor-pointer hover:bg-white transition-colors"
+            >
+              {investorsList.map((inv) => (
+                <option key={inv.id} value={inv.id}>
+                  {inv.name} (Age {inv.age})
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : currentInvestor && (
+          <div className="bg-white/80 backdrop-blur-sm p-2.5 rounded-[8px] border border-[#E5E0D8] space-y-1.5 shadow-sm">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-semibold text-[#78716C] uppercase tracking-wider">My Profile</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1A7A6D]" />
+            </div>
+            <div className="bg-[#FAF8F4] text-[#1C1917] text-[12px] font-semibold px-2.5 py-1.5 rounded-[6px] border border-[#E5E0D8]">
+              {currentInvestor.name} (Age {currentInvestor.age})
+            </div>
+          </div>
+        )}
+
+        {/* Main Navigation */}
         <nav className="space-y-1">
           <span className="text-[10px] font-semibold text-[#A8A29E] uppercase tracking-wider px-2 block mb-2">Main Menu</span>
           {navItems.map((item) => {

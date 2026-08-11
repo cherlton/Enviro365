@@ -16,6 +16,7 @@ public class InvestorDTO {
     private int age;
     private boolean eligibleForRetirement;
     private List<PortfolioDTO> portfolios;
+    private java.math.BigDecimal totalInvestmentValue;
 
     public InvestorDTO() {}
 
@@ -32,6 +33,12 @@ public class InvestorDTO {
             this.portfolios = investor.getPortfolios().stream()
                     .map(PortfolioDTO::new)
                     .collect(Collectors.toList());
+            this.totalInvestmentValue = investor.getPortfolios().stream()
+                    .flatMap(p -> p.getProducts().stream())
+                    .map(prod -> prod.getBalance() != null ? prod.getBalance() : java.math.BigDecimal.ZERO)
+                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        } else {
+            this.totalInvestmentValue = java.math.BigDecimal.ZERO;
         }
     }
 
@@ -61,4 +68,7 @@ public class InvestorDTO {
 
     public List<PortfolioDTO> getPortfolios() { return portfolios; }
     public void setPortfolios(List<PortfolioDTO> portfolios) { this.portfolios = portfolios; }
+
+    public java.math.BigDecimal getTotalInvestmentValue() { return totalInvestmentValue; }
+    public void setTotalInvestmentValue(java.math.BigDecimal totalInvestmentValue) { this.totalInvestmentValue = totalInvestmentValue; }
 }

@@ -53,8 +53,13 @@ export const WithdrawalForm = ({ investor, selectedProduct, onWithdrawalCreated 
   const isRetirementViolation =
     activeProduct?.type === 'RETIREMENT' && (!investor || investor.age <= 65);
   const maxCap = activeProduct ? Number(activeProduct.balance) * 0.9 : 0;
-  const isCapViolation = activeProduct && numAmount > maxCap;
-  const isExceedBalance = activeProduct && numAmount > Number(activeProduct.balance);
+  
+  const numAmountCents = Math.round(numAmount * 100);
+  const maxCapCents = Math.round(maxCap * 100);
+  const balanceCents = Math.round((Number(activeProduct?.balance) || 0) * 100);
+
+  const isExceedBalance = activeProduct && numAmountCents > balanceCents;
+  const isCapViolation = activeProduct && numAmount > 0 && numAmountCents >= maxCapCents;
 
   // Simulation calculations
   const currentBalance = activeProduct ? Number(activeProduct.balance) : 0;
@@ -72,6 +77,36 @@ export const WithdrawalForm = ({ investor, selectedProduct, onWithdrawalCreated 
         message: 'Please select a valid product and enter a positive withdrawal amount.',
       });
       toast.warning('Invalid Input', 'Please select a valid product and enter a positive withdrawal amount.');
+      return;
+    }
+
+    if (isExceedBalance) {
+      const err = {
+        errorCode: 'INSUFFICIENT_BALANCE',
+        message: `Withdrawal rejected. Requested amount R ${numAmount.toFixed(2)} exceeds current available balance of R ${Number(activeProduct?.balance || 0).toFixed(2)} for product '${activeProduct?.name}'.`,
+      };
+      setErrorResponse(err);
+      toast.error('Withdrawal Rejected', err.message);
+      return;
+    }
+
+    if (isCapViolation) {
+      const err = {
+        errorCode: 'CAP_90_PERCENT_EXCEEDED',
+        message: `Withdrawal rejected. Requested amount R ${numAmount.toFixed(2)} exceeds maximum allowed 90% cap (R ${maxCap.toFixed(2)}) for product '${activeProduct?.name}'.`,
+      };
+      setErrorResponse(err);
+      toast.error('Withdrawal Rejected', err.message);
+      return;
+    }
+
+    if (isRetirementViolation) {
+      const err = {
+        errorCode: 'RETIREMENT_AGE_RESTRICTION',
+        message: `Retirement withdrawal rejected. Investor '${investor?.name}' is ${investor?.age} years old. Withdrawals from RETIREMENT products require investor age to be greater than 65.`,
+      };
+      setErrorResponse(err);
+      toast.error('Withdrawal Rejected', err.message);
       return;
     }
 
@@ -190,7 +225,7 @@ export const WithdrawalForm = ({ investor, selectedProduct, onWithdrawalCreated 
               <Alert
                 type="warning"
                 title="90% Cap Warning"
-                message={`Requested amount R ${numAmount} exceeds maximum 90% limit (R ${maxCap.toFixed(2)}).`}
+                message={`Requested amount R ${numAmount.toFixed(2)} reaches or exceeds the maximum allowed 90% withdrawal cap (R ${maxCap.toFixed(2)}). Withdrawals of 90% or more of total balance are disallowed.`}
               />
             )}
 
@@ -264,7 +299,14 @@ export const WithdrawalForm = ({ investor, selectedProduct, onWithdrawalCreated 
 
             {/* Submit Button */}
             <div className="pt-2">
-              <Button type="submit" variant="primary" size="lg" className="w-full" isLoading={isLoading}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                isLoading={isLoading}
+                disabled={isLoading || isExceedBalance || isCapViolation || isRetirementViolation}
+              >
                 Submit Withdrawal Request
               </Button>
             </div>

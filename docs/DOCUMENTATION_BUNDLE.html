@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Enviro365 Investment Management System - Complete Documentation</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1C1917;
+      background-color: #FFFFFF;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    h1, h2, h3, h4 {
+      color: #1A7A6D;
+      border-bottom: 1px solid #E5E0D8;
+      padding-bottom: 6px;
+    }
+    h1 { font-size: 28px; }
+    h2 { font-size: 22px; margin-top: 30px; }
+    h3 { font-size: 18px; margin-top: 20px; }
+    code {
+      background-color: #F5F1EC;
+      color: #1C1917;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+    }
+    pre {
+      background-color: #F9F7F4;
+      border: 1px solid #E5E0D8;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #E5E0D8;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      background-color: #F5F1EC;
+      color: #1C1917;
+      font-weight: 600;
+    }
+    img {
+      max-width: 100%;
+      border: 1px solid #E5E0D8;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(27,38,35,0.06);
+      margin: 15px 0;
+    }
+    .badge {
+      background-color: #E8F5F2;
+      color: #1A7A6D;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #1A7A6D;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    @media print {
+      .print-btn { display: none; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+
+  <h1>Enviro365 Investment Management System</h1>
+  <p><strong>Base Package:</strong> <code>com.enviro.assessment.junior.cherlton</code> | <strong>Assessment 2026</strong></p>
+
+  <hr>
+
+  <h2>⚡ 1. Setup & Installation Guide</h2>
+  <h3>Prerequisites</h3>
+  <ul>
+    <li><strong>Java JDK 21</strong> or higher</li>
+    <li><strong>Node.js 18</strong> or higher</li>
+  </ul>
+
+  <h3>Backend Setup (Spring Boot)</h3>
+  <pre>.\mvnw.cmd spring-boot:run</pre>
+  <ul>
+    <li><strong>REST API:</strong> <code>http://localhost:8080/api</code></li>
+    <li><strong>H2 Database Console:</strong> <code>http://localhost:8080/h2-console</code> (JDBC: <code>jdbc:h2:mem:investmentdb</code>, User: <code>sa</code>, Password: blank)</li>
+  </ul>
+
+  <h3>Frontend Setup (React + Vite)</h3>
+  <pre>cd frontend
+npm install
+npm run dev</pre>
+  <ul>
+    <li><strong>UI URL:</strong> <code>http://localhost:5173</code></li>
+  </ul>
+
+  <hr>
+
+  <h2>📑 2. REST API Documentation</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>HTTP Method</th>
+        <th>Endpoint Path</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/portfolios/{investorId}</code></td>
+        <td>Returns investor details, portfolios, product holdings, and 90% withdrawal caps.</td>
+      </tr>
+      <tr>
+        <td><code>POST</code></td>
+        <td><code>/api/withdrawals</code></td>
+        <td>Executes business rule validation, balance deduction, and creates notice.</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/withdrawals</code></td>
+        <td>Retrieves past withdrawal notices with optional query date range filters.</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/withdrawals/export/csv</code></td>
+        <td>Exports filtered withdrawal statements as a downloadable CSV file.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Business Rule Validation Engine</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Rule</th>
+        <th>Validation Description</th>
+        <th>Error Code</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Retirement Age Restriction</td>
+        <td>Retirement product withdrawals require investor age &gt; 65</td>
+        <td><code>RETIREMENT_AGE_RESTRICTION</code></td>
+      </tr>
+      <tr>
+        <td>Balance Sufficiency</td>
+        <td>Requested withdrawal amount must not exceed balance</td>
+        <td><code>INSUFFICIENT_BALANCE</code></td>
+      </tr>
+      <tr>
+        <td>90% Withdrawal Cap</td>
+        <td>Requested withdrawal amount must not exceed 90% of balance</td>
+        <td><code>CAP_90_PERCENT_EXCEEDED</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <h2>🤖 3. AI Tooling & Pair-Programming Disclosure</h2>
+  <p>During development, <strong>Antigravity AI</strong> was utilized as an AI pair-programmer for:</p>
+  <ul>
+    <li><strong>UI/UX Color Psychology Research:</strong> Selected warm paper-cream (<code>#FAF8F4</code>) and forest teal green (<code>#1A7A6D</code>) palette to promote visual trust.</li>
+    <li><strong>Micro-Animations:</strong> Created CSS keyframe animations for fluid section transitions and toast popups.</li>
+    <li><strong>Environment Troubleshooting:</strong> Diagnosed JDK 21 agent loading warnings during Maven unit testing.</li>
+    <li><strong>Test Edge-Case Drafts:</strong> Generated test scenarios for JUnit 5 and Mockito test suites.</li>
+  </ul>
+
+  <hr>
+
+  <h2>📸 4. System Screenshots</h2>
+
+  <h3>Portfolio Overview Dashboard</h3>
+  <img src="./screenshots/01-portfolio-overview.PNG" alt="Portfolio Overview Dashboard">
+
+  <h3>Create Withdrawal Notice & Simulation Widget</h3>
+  <img src="./screenshots/02-withdrawal-form.PNG" alt="Create Withdrawal Notice Form">
+
+  <h3>Withdrawal Audit History & Filtered CSV Export</h3>
+  <img src="./screenshots/03-withdrawal-history.PNG" alt="Withdrawal History Table">
+
+  <h3>Responsive Mobile & Tablet Drawer Menu</h3>
+  <img src="./screenshots/04-mobile-drawer.PNG" alt="Mobile Drawer Interface">
+
+</body>
+</html>

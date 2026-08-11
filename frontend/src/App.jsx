@@ -4,21 +4,27 @@ import Navbar from './components/Navbar';
 import PortfolioDashboard from './components/PortfolioDashboard';
 import WithdrawalForm from './components/WithdrawalForm';
 import WithdrawalHistory from './components/WithdrawalHistory';
+import AdminDashboard from './components/admin/AdminDashboard';
+import AuthModal from './components/auth/AuthModal';
+import HeroLanding from './components/HeroLanding';
 import ToastProvider, { useToast } from './components/ui/Toast';
-import { getInvestorPortfolio, getWithdrawalNotices } from './services/api';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { getInvestorPortfolio, getWithdrawalNotices, getAllInvestors } from './services/api';
 import './index.css';
 
-const DEMO_INVESTORS = [
-  { id: 1, name: 'Dr. Sipho Ndlovu', age: 72, eligibleForRetirement: true },
-  { id: 2, name: 'Thabo Mbeki Jr', age: 40, eligibleForRetirement: false },
-];
+/**
+ * Authenticated Dashboard: shown after login for both Investor and Admin roles.
+ * No hardcoded data — investor list is fetched from the API.
+ */
+function AuthenticatedDashboard() {
+  const { user, isAdmin, investorId: authInvestorId } = useAuth();
 
-function MainContent() {
-  const [currentInvestorId, setCurrentInvestorId] = useState(1);
+  const [investorsList, setInvestorsList] = useState([]);
+  const [currentInvestorId, setCurrentInvestorId] = useState(authInvestorId || null);
   const [investorData, setInvestorData] = useState(null);
   const [recentNotices, setRecentNotices] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'admin' : 'overview');
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,14 +33,39 @@ function MainContent() {
 
   const toast = useToast();
 
+  // Load all investors from API for the sidebar selector
+  useEffect(() => {
+    const fetchInvestors = async () => {
+      try {
+        const data = await getAllInvestors();
+        setInvestorsList(data || []);
+
+        // Set current investor ID from auth or first available
+        if (authInvestorId) {
+          setCurrentInvestorId(authInvestorId);
+        } else if (data && data.length > 0) {
+          setCurrentInvestorId(data[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load investors list:', err);
+        // Fallback: if investor, use their own ID
+        if (authInvestorId) {
+          setCurrentInvestorId(authInvestorId);
+        }
+      }
+    };
+    fetchInvestors();
+  }, [authInvestorId, refreshTrigger]);
+
+  // Load portfolio data for current investor
   const loadInvestorData = async (id) => {
+    if (!id) return;
     setIsLoading(true);
     setError(null);
     try {
       const data = await getInvestorPortfolio(id);
       setInvestorData(data);
 
-      // Fetch recent notices for notification popover
       const notices = await getWithdrawalNotices({ investorId: id });
       setRecentNotices(notices || []);
     } catch (err) {
@@ -49,13 +80,15 @@ function MainContent() {
   };
 
   useEffect(() => {
-    loadInvestorData(currentInvestorId);
+    if (currentInvestorId) {
+      loadInvestorData(currentInvestorId);
+    }
   }, [currentInvestorId, refreshTrigger]);
 
   const handleSelectInvestor = (id) => {
     setCurrentInvestorId(id);
     setSelectedProduct(null);
-    const investor = DEMO_INVESTORS.find((i) => i.id === id);
+    const investor = investorsList.find((i) => i.id === id);
     if (investor) {
       toast.success('Profile Switched', `Active investor set to ${investor.name}`);
     }
@@ -75,16 +108,14 @@ function MainContent() {
     setIsMobileSidebarOpen(false);
   };
 
-  const currentInvestorInfo = DEMO_INVESTORS.find((i) => i.id === currentInvestorId);
-
   return (
     <div className="min-h-screen bg-[#F9F7F4] text-[#1C1917] flex font-sans relative overflow-x-hidden">
       {/* Desktop 240px Left Sidebar */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
-        currentInvestor={investorData || currentInvestorInfo}
-        investorsList={DEMO_INVESTORS}
+        currentInvestor={investorData}
+        investorsList={investorsList}
         onSelectInvestor={handleSelectInvestor}
         noticesCount={recentNotices.length}
       />
@@ -92,18 +123,16 @@ function MainContent() {
       {/* Mobile Backdrop & Slide-over Drawer Sidebar */}
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
-          {/* Backdrop overlay */}
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
-          {/* Drawer Content */}
           <div className="relative w-[280px] max-w-[80vw] bg-white h-full shadow-2xl z-10">
             <Sidebar
               activeTab={activeTab}
               setActiveTab={handleTabChange}
-              currentInvestor={investorData || currentInvestorInfo}
-              investorsList={DEMO_INVESTORS}
+              currentInvestor={investorData}
+              investorsList={investorsList}
               onSelectInvestor={handleSelectInvestor}
               noticesCount={recentNotices.length}
               isMobile={true}
@@ -115,12 +144,11 @@ function MainContent() {
 
       {/* Main Right Content Layout */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Navigation Bar with Mobile Drawer Hamburger & Functional Search */}
         <Navbar
-          currentInvestor={investorData || currentInvestorInfo}
+          currentInvestor={investorData}
           currentInvestorId={currentInvestorId}
           onSelectInvestor={handleSelectInvestor}
-          investorsList={DEMO_INVESTORS}
+          investorsList={investorsList}
           recentNotices={recentNotices}
           onNavigateToHistory={() => setActiveTab('history')}
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
@@ -144,16 +172,16 @@ function MainContent() {
           ) : isLoading ? (
             <div className="p-16 text-center text-[#78716C]">
               <span className="inline-block w-6 h-6 border-2 border-[#1A7A6D] border-t-transparent rounded-full animate-spin mb-2" />
-              <p className="text-[13px]">Loading investor portfolio data...</p>
+              <p className="text-[13px]">Loading portfolio data...</p>
             </div>
           ) : (
             <div key={activeTab}>
-              {/* Tab Navigation Content */}
               {activeTab === 'overview' && (
                 <PortfolioDashboard
                   investor={investorData}
                   onSelectProductForWithdrawal={handleSelectProductForWithdrawal}
                   globalSearchQuery={globalSearchQuery}
+                  onDataChanged={() => setRefreshTrigger((prev) => prev + 1)}
                 />
               )}
 
@@ -176,6 +204,12 @@ function MainContent() {
                   />
                 </div>
               )}
+
+              {activeTab === 'admin' && (
+                <div className="py-2 space-y-6">
+                  <AdminDashboard />
+                </div>
+              )}
             </div>
           )}
         </main>
@@ -184,10 +218,35 @@ function MainContent() {
   );
 }
 
+/**
+ * Root: gates Hero Landing (logged out) vs Authenticated Dashboard (logged in).
+ */
+function MainContent() {
+  const { user, authModalOpen, setAuthModalOpen } = useAuth();
+
+  if (!user) {
+    return (
+      <>
+        <HeroLanding />
+        <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <AuthenticatedDashboard />
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+    </>
+  );
+}
+
 export function App() {
   return (
     <ToastProvider>
-      <MainContent />
+      <AuthProvider>
+        <MainContent />
+      </AuthProvider>
     </ToastProvider>
   );
 }

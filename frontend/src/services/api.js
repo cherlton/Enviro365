@@ -20,19 +20,67 @@ async function handleResponse(response) {
   return response.json();
 }
 
-/**
- * Fetches investor details and product holdings.
- * Requirement 1: GET /api/portfolios/{investorId}
- */
+/* --- Authentication APIs --- */
+
+export async function loginUser(email, password) {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  return handleResponse(response);
+}
+
+export async function registerUser(payload) {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
+}
+
+/* --- Portfolio & Data Insertion APIs --- */
+
 export async function getInvestorPortfolio(investorId) {
   const response = await fetch(`${API_BASE_URL}/portfolios/${investorId}`);
   return handleResponse(response);
 }
 
-/**
- * Creates a new withdrawal notice.
- * Requirement 2: POST /api/withdrawals
- */
+export async function createPortfolio(payload) {
+  const response = await fetch(`${API_BASE_URL}/portfolios`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
+}
+
+export async function addProductToPortfolio(portfolioId, payload) {
+  const response = await fetch(`${API_BASE_URL}/portfolios/${portfolioId}/products`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, portfolioId: Number(portfolioId) }),
+  });
+  return handleResponse(response);
+}
+
+export async function updateInvestorProfile(investorId, payload) {
+  const response = await fetch(`${API_BASE_URL}/investors/${investorId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
+}
+
+export async function getAllInvestors() {
+  const response = await fetch(`${API_BASE_URL}/investors`);
+  return handleResponse(response);
+}
+
+/* --- Withdrawal APIs --- */
+
 export async function createWithdrawalNotice(payload) {
   const response = await fetch(`${API_BASE_URL}/withdrawals`, {
     method: 'POST',
@@ -44,9 +92,6 @@ export async function createWithdrawalNotice(payload) {
   return handleResponse(response);
 }
 
-/**
- * Fetches past withdrawal notices with optional query filters.
- */
 export async function getWithdrawalNotices({ investorId, productId, startDate, endDate } = {}) {
   const params = new URLSearchParams();
   if (investorId) params.append('investorId', investorId);
@@ -59,10 +104,6 @@ export async function getWithdrawalNotices({ investorId, productId, startDate, e
   return handleResponse(response);
 }
 
-/**
- * Downloads CSV statement file from backend endpoint.
- * Requirement 3: GET /api/withdrawals/export/csv
- */
 export async function downloadCsvStatements({ investorId, productId, startDate, endDate } = {}) {
   const params = new URLSearchParams();
   if (investorId) params.append('investorId', investorId);
@@ -86,4 +127,29 @@ export async function downloadCsvStatements({ investorId, productId, startDate, 
   a.click();
   a.remove();
   window.URL.revokeObjectURL(downloadUrl);
+}
+
+/* --- Admin Management APIs --- */
+
+export async function getAdminMetrics() {
+  const response = await fetch(`${API_BASE_URL}/admin/metrics`);
+  return handleResponse(response);
+}
+
+export async function updateNoticeStatus(noticeId, status) {
+  const response = await fetch(`${API_BASE_URL}/admin/withdrawals/${noticeId}/status`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  return handleResponse(response);
+}
+
+export async function createSystemProduct(payload) {
+  const response = await fetch(`${API_BASE_URL}/admin/products`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
 }

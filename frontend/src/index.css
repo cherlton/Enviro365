@@ -110,6 +110,22 @@
   animation: dropdownFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Modal Popup Entrance Animation */
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-pop {
+  animation: modalPopIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

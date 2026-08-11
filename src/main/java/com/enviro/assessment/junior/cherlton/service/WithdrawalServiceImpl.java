@@ -102,4 +102,14 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         }
         return out.toByteArray();
     }
+
+    @Override
+    public WithdrawalNoticeDTO updateNoticeStatus(Long noticeId, WithdrawalStatus status) {
+        WithdrawalNotice notice = withdrawalNoticeRepository.findById(noticeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Withdrawal notice not found with ID: " + noticeId));
+
+        notice.setStatus(status);
+        WithdrawalNotice updated = withdrawalNoticeRepository.save(notice);
+        return new WithdrawalNoticeDTO(updated);
+    }
 }

@@ -19,16 +19,19 @@ public class DataInitializer implements CommandLineRunner {
     private final PortfolioRepository portfolioRepository;
     private final ProductRepository productRepository;
     private final WithdrawalNoticeRepository withdrawalNoticeRepository;
+    private final UserRepository userRepository;
 
     public DataInitializer(
             InvestorRepository investorRepository,
             PortfolioRepository portfolioRepository,
             ProductRepository productRepository,
-            WithdrawalNoticeRepository withdrawalNoticeRepository) {
+            WithdrawalNoticeRepository withdrawalNoticeRepository,
+            UserRepository userRepository) {
         this.investorRepository = investorRepository;
         this.portfolioRepository = portfolioRepository;
         this.productRepository = productRepository;
         this.withdrawalNoticeRepository = withdrawalNoticeRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -53,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         productRepository.save(p4);
         productRepository.save(p5);
 
-        // 2. Investor 1: Dr. Sipho Ndlovu (Age 72 -> Born 1954-05-12) - ELIGIBLE for retirement withdrawal (> 65)
+        // 2. Investor 1: Dr. Sipho Ndlovu (Age 72 -> Born 1954-05-12)
         Investor investor1 = new Investor(
                 "Dr. Sipho Ndlovu",
                 "sipho.ndlovu@example.com",
@@ -72,9 +75,9 @@ public class DataInitializer implements CommandLineRunner {
         investor1.addPortfolio(portfolio1);
         investor1.addPortfolio(portfolio2);
 
-        investorRepository.save(investor1);
+        Investor savedInvestor1 = investorRepository.save(investor1);
 
-        // 3. Investor 2: Thabo Mbeki Jr (Age 40 -> Born 1985-09-24) - INELIGIBLE for retirement withdrawal (<= 65)
+        // 3. Investor 2: Thabo Mbeki Jr (Age 40 -> Born 1985-09-24)
         Investor investor2 = new Investor(
                 "Thabo Mbeki Jr",
                 "thabo.junior@example.com",
@@ -89,20 +92,34 @@ public class DataInitializer implements CommandLineRunner {
 
         investor2.addPortfolio(portfolio3);
 
-        investorRepository.save(investor2);
+        Investor savedInvestor2 = investorRepository.save(investor2);
 
-        // 4. Initial Withdrawal Notices
-        WithdrawalNotice notice1 = new WithdrawalNotice(investor1, p2, new BigDecimal("15000.00"), LocalDate.now().minusDays(10));
+        // 4. Create User Authentication Accounts
+        User u1 = new User("sipho.ndlovu@example.com", "password123", Role.INVESTOR, savedInvestor1);
+        User u2 = new User("thabo.junior@example.com", "password123", Role.INVESTOR, savedInvestor2);
+        User uAdmin = new User("admin@enviro365.co.za", "admin123", Role.ADMIN, null);
+
+        userRepository.save(u1);
+        userRepository.save(u2);
+        userRepository.save(uAdmin);
+
+        // 5. Initial Withdrawal Notices
+        WithdrawalNotice notice1 = new WithdrawalNotice(savedInvestor1, p2, new BigDecimal("15000.00"), LocalDate.now().minusDays(10));
         notice1.setStatus(WithdrawalStatus.APPROVED);
         notice1.setReason("Home renovation expenses");
 
-        WithdrawalNotice notice2 = new WithdrawalNotice(investor1, p1, new BigDecimal("25000.00"), LocalDate.now().minusDays(3));
+        WithdrawalNotice notice2 = new WithdrawalNotice(savedInvestor1, p1, new BigDecimal("25000.00"), LocalDate.now().minusDays(3));
         notice2.setStatus(WithdrawalStatus.APPROVED);
         notice2.setReason("Annual retirement income drawdown");
 
+        WithdrawalNotice notice3 = new WithdrawalNotice(savedInvestor2, p4, new BigDecimal("10000.00"), LocalDate.now().minusDays(1));
+        notice3.setStatus(WithdrawalStatus.PENDING);
+        notice3.setReason("Vehicle deposit payment");
+
         withdrawalNoticeRepository.save(notice1);
         withdrawalNoticeRepository.save(notice2);
+        withdrawalNoticeRepository.save(notice3);
 
-        log.info("Demo data seeding completed successfully! Seeded 2 investors, 3 portfolios, 5 products, and 2 notices.");
+        log.info("Demo data seeding completed successfully! Seeded 3 users (2 Investors, 1 Admin), 3 portfolios, 5 products, and 3 notices.");
     }
 }

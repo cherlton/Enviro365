@@ -10,4 +10,5 @@ public interface WithdrawalService {
     WithdrawalNoticeDTO createWithdrawalNotice(WithdrawalRequestDTO request);
     List<WithdrawalNoticeDTO> getWithdrawalNotices(Long investorId, Long productId, LocalDate startDate, LocalDate endDate);
     byte[] exportWithdrawalCsv(Long investorId, Long productId, LocalDate startDate, LocalDate endDate);
+    WithdrawalNoticeDTO updateNoticeStatus(Long noticeId, com.enviro.assessment.junior.cherlton.model.WithdrawalStatus status);
 }

@@ -144,7 +144,7 @@ public class Product {
      */
     public boolean exceeds90PercentCap(BigDecimal amount) {
         if (amount == null || balance == null) return false;
-        return amount.compareTo(getMaxWithdrawalAllowed()) > 0;
+        return amount.compareTo(getMaxWithdrawalAllowed()) >= 0;
     }
 
     /**

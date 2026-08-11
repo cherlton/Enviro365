@@ -73,19 +73,19 @@ class WithdrawalValidatorTest {
     }
 
     @Test
-    @DisplayName("90% Cap Rule - Amount <= 90% balance should succeed")
+    @DisplayName("90% Cap Rule - Amount strictly less than 90% balance should succeed")
     void test90PercentCapRule_WithinCap_Success() {
-        // Balance is 100,000; 90% is 90,000
-        assertDoesNotThrow(() -> validator.validate90PercentCapRule(savingsProduct, new BigDecimal("90000.00")));
+        // Balance is 100,000; 80% is 80,000 (strictly < 90%)
+        assertDoesNotThrow(() -> validator.validate90PercentCapRule(savingsProduct, new BigDecimal("80000.00")));
     }
 
     @Test
-    @DisplayName("90% Cap Rule - Amount > 90% balance should fail with CAP_90_PERCENT_EXCEEDED")
+    @DisplayName("90% Cap Rule - Amount >= 90% balance should fail with CAP_90_PERCENT_EXCEEDED")
     void test90PercentCapRule_ExceedingCap_ThrowsException() {
-        // Balance is 100,000; 90% is 90,000; requesting 90,001
+        // Balance is 100,000; 90% is 90,000; requesting 90,000 (90%)
         InvalidWithdrawalException ex = assertThrows(
                 InvalidWithdrawalException.class,
-                () -> validator.validate90PercentCapRule(savingsProduct, new BigDecimal("90001.00"))
+                () -> validator.validate90PercentCapRule(savingsProduct, new BigDecimal("90000.00"))
         );
         assertEquals(WithdrawalValidator.CODE_CAP_90_PERCENT_EXCEEDED, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("exceeds maximum allowed withdrawal of 90%"));
